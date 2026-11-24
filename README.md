@@ -1,4 +1,4 @@
-# Project Name
+# GTA – Open World Mission Hub
 
 **About the Project:** Open World Mission Hub is a backend application inspired by open-world games, built with FastAPI and SQLite. Players can explore and accept missions, submit completion details and earn rewards and experience points, while mission managers create missions and verify completion, and admins manage the platform.
 
@@ -6,7 +6,7 @@
 
 ## 1. Project and Team
 
-- **Project Name:** `project_name`
+- **Project Name:** `GTA – Open World Mission Hub`
 - **Team Members:** Melvin, Naman, Abhishek
 
 ---
