@@ -148,11 +148,47 @@ def get_player_completed_history(player_id: int):
 
 # Rewards, Leaderboard & Profile (E11 - E15)
 def create_reward(mission_id: int, name: str, description: str):
-    pass
+    session = Session(engine)
+    mission = session.query(missions).filter(missions.id == mission_id).first()
+    if not mission:
+        session.close()
+        return None
+
+    new_reward = rewards(
+        mission_id=mission_id,
+        name=name,
+        description=description
+    )
+    session.add(new_reward)
+    session.commit()
+
+    result = {
+        "id": new_reward.id,
+        "mission_id": new_reward.mission_id,
+        "name": new_reward.name,
+        "description": new_reward.description,
+        "assigned_to": new_reward.assigned_to
+    }
+
+    session.close()
+    return result
 
 
 def get_available_rewards():
-    pass
+    session = Session(engine)
+    available = session.query(rewards).filter(rewards.assigned_to == None).all()
+
+    result = []
+    for item in available:
+        result.append({
+            "id": item.id,
+            "mission_id": item.mission_id,
+            "name": item.name,
+            "description": item.description
+        })
+
+    session.close()
+    return result
 
 
 def assign_reward(reward_id: int, player_id: int):
