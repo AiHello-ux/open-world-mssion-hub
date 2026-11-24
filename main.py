@@ -67,7 +67,17 @@ def login(data: UserLogin):
 
 @app.post("/auth/refresh")
 def refresh(refresh_token: str):
-    pass
+    user = functions.verify_token(token=refresh_token, tokentype="refresh")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    access_token = functions.create_token(
+        user_id=user["user_id"],
+        email=user["email"],
+        role=user["role"],
+        tokentype="access"
+    )
+    return {"access_token": access_token}
 
 
 # E1 - E5: Admin & Mission APIs
