@@ -179,4 +179,34 @@ def get_leaderboard():
     
 
 def get_player_profile(player_id: int):
-    pass
+    session = Session(engine)
+    player = session.query(users).filter(users.id == player_id, users.role == "player").first()
+    if not player:
+        session.close()
+        return None
+
+    total_missions_taken = session.query(player_missions).filter(
+        player_missions.player_id == player_id
+    ).count()
+
+    completed_missions = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.status == "approved"
+    ).count()
+
+    total_rewards = session.query(rewards).filter(
+        rewards.assigned_to == player_id
+    ).count()
+
+    result = {
+        "id": player.id,
+        "username": player.username,
+        "email": player.email,
+        "xp": player.xp,
+        "total_missions_taken": total_missions_taken,
+        "completed_missions": completed_missions,
+        "total_rewards": total_rewards
+    }
+
+    session.close()
+    return result

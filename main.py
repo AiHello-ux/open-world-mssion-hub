@@ -150,9 +150,21 @@ def assign_reward(reward_id: int, player_id: int, token=Header(None)):
 
 @app.get("/leaderboard")
 def leaderboard(token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return functions.get_leaderboard()
 
 
 @app.get("/players/{player_id}/profile")
 def player_profile(player_id: int, token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    profile = functions.get_player_profile(player_id=player_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    return profile
