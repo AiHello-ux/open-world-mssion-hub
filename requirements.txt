@@ -1,3 +1,5 @@
+httpx
+pytest
 sqlalchemy
 PyJWT
 argon2-cffi
