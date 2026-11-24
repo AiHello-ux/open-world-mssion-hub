@@ -160,8 +160,23 @@ def assign_reward(reward_id: int, player_id: int):
 
 
 def get_leaderboard():
-    pass
+    session = Session(engine)
+    players = session.query(users).filter(users.role == "player").order_by(users.xp.desc()).all()
 
+    result = []
+    rank = 1
+    for player in players:
+        result.append({
+            "rank": rank,
+            "id": player.id,
+            "username": player.username,
+            "xp": player.xp
+        })
+        rank += 1
+
+    session.close()
+    return result
+    
 
 def get_player_profile(player_id: int):
     pass
