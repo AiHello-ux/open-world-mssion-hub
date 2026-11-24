@@ -65,12 +65,36 @@ Base.metadata.create_all(engine)
 
 # Token & Auth Functions (A1 - A3)
 def create_token(user_id: int, email: str, role: str, tokentype: str = "access"):
-    pass
+    if tokentype == "access":
+        payload = {
+            "user_id": user_id,
+            "email": email,
+            "role": role,
+            "tokentype": tokentype,
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRY)
+        }
+    elif tokentype == "refresh":
+        payload = {
+            "user_id": user_id,
+            "email": email,
+            "role": role,
+            "tokentype": tokentype,
+            "exp": datetime.now(timezone.utc) + timedelta(hours=REFRESH_TOKEN_EXPIRY)
+        }
+    token = jwt.encode(payload=payload, key=SECRET_KEY, algorithm=ALGORITHM)
+    return token
 
 
 def verify_token(token: str, tokentype: str = "access"):
-    pass
-
+    if not token:
+        return False
+    try:
+        payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.InvalidTokenError:
+        return False
+    if payload.get("tokentype") == tokentype:
+        return payload
+    return False
 
 def register_user(username: str, email: str, password: str):
     pass
