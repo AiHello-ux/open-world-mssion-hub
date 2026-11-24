@@ -9,10 +9,11 @@ jobs:
   build-push-deploy:
     runs-on: ubuntu-latest
     env:
-      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/studenttracker
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/gta-mission-hub
       VERSION: v${{ github.run_number }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -23,8 +24,8 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
@@ -38,5 +39,12 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-
-           
+            mkdir -p /home/${{ secrets.EC2_USER }}/gta-data
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gta-mission-hub:latest
+            docker stop gta-app || true
+            docker rm gta-app || true
+            docker run -d --name gta-app --restart unless-stopped \
+              -p 8001:8001 \
+              -v /home/${{ secrets.EC2_USER }}/gta-data:/app/data \
+              ${{ secrets.DOCKERHUB_USERNAME }}/gta-mission-hub:latest
+            docker image prune -f
