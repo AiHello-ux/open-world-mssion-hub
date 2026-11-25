@@ -158,26 +158,23 @@ def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
         raise HTTPException(status_code=404, detail="Mission not found")
     return {"message": "Mission updated successfully"}
 
+
 # E6 - E10: Player Mission & Review APIs
 @app.post("/missions/{mission_id}/accept")
 def accept_mission(mission_id: int, token=Header(None)):
     pass
 
-
 @app.get("/players/me/missions")
 def my_accepted_missions(token=Header(None)):
     pass
-
 
 @app.post("/missions/{mission_id}/submit")
 def submit_mission(mission_id: int, submission_details: str, token=Header(None)):
     pass
 
-
 @app.patch("/submissions/{submission_id}/review")
 def review_submission(submission_id: int, status: str, token=Header(None)):
     pass
-
 
 @app.get("/players/{player_id}/history")
 def player_history(player_id: int, token=Header(None)):
@@ -209,13 +206,30 @@ def list_rewards(token=Header(None)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
+    if user["role"] == "player":
+        return functions.get_available_rewards(player_id=user["user_id"])
     return functions.get_available_rewards()
-
 
 @app.post("/rewards/{reward_id}/assign")
 def assign_reward(reward_id: int, player_id: int, token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can assign rewards")
 
+    result = functions.assign_reward(reward_id=reward_id, player_id=player_id)
+
+    if result == "reward_not_found":
+        raise HTTPException(status_code=404, detail="Reward not found")
+    if result == "already_assigned":
+        raise HTTPException(status_code=400, detail="Reward has already been assigned")
+    if result == "player_not_found":
+        raise HTTPException(status_code=404, detail="Player not found")
+    if result == "mission_not_completed":
+        raise HTTPException(status_code=400, detail="Player has not completed and been approved for this mission")
+
+    return result
 
 @app.get("/leaderboard")
 def leaderboard(token=Header(None)):
@@ -224,7 +238,6 @@ def leaderboard(token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     return functions.get_leaderboard()
-
 
 @app.get("/players/{player_id}/profile")
 def player_profile(player_id: int, token=Header(None)):

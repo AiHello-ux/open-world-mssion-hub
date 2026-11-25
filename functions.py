@@ -56,8 +56,14 @@ class rewards(Base):
     mission_id = Column(Integer, ForeignKey("missions.id"))
     name = Column(String)
     description = Column(String)
-    assigned_to = Column(Integer, ForeignKey("users.id"))
-    assigned_at = Column(DateTime)
+
+
+class player_rewards(Base):
+    __tablename__ = "player_rewards"
+    id = Column(Integer, primary_key=True)
+    reward_id = Column(Integer, ForeignKey("rewards.id"))
+    player_id = Column(Integer, ForeignKey("users.id"))
+    assigned_at = Column(DateTime, default=datetime.now)
 
 
 Base.metadata.create_all(engine)
@@ -230,6 +236,24 @@ def create_reward(mission_id: int, name: str, description: str):
         "id": new_reward.id,
         "mission_id": new_reward.mission_id,
         "name": new_reward.name,
+        "description": new_reward.description
+    }
+
+    session.close()
+    return result
+
+    new_reward = rewards(
+        mission_id=mission_id,
+        name=name,
+        description=description
+    )
+    session.add(new_reward)
+    session.commit()
+
+    result = {
+        "id": new_reward.id,
+        "mission_id": new_reward.mission_id,
+        "name": new_reward.name,
         "description": new_reward.description,
         "assigned_to": new_reward.assigned_to
     }
@@ -237,9 +261,27 @@ def create_reward(mission_id: int, name: str, description: str):
     session.close()
     return result
 
-def get_available_rewards():
+def get_available_rewards(player_id: int = None):
     session = Session(engine)
-    available = session.query(rewards).filter(rewards.assigned_to == None).all()
+    all_rewards = session.query(rewards).all()
+
+    claimed_ids = []
+    if player_id:
+        claimed = session.query(player_rewards).filter(player_rewards.player_id == player_id).all()
+        claimed_ids = [item.reward_id for item in claimed]
+
+    result = []
+    for item in all_rewards:
+        if item.id not in claimed_ids:
+            result.append({
+                "id": item.id,
+                "mission_id": item.mission_id,
+                "name": item.name,
+                "description": item.description
+            })
+
+    session.close()
+    return result
 
     result = []
     for item in available:
@@ -254,7 +296,52 @@ def get_available_rewards():
     return result
 
 def assign_reward(reward_id: int, player_id: int):
-    pass
+    session = Session(engine)
+
+    reward_item = session.query(rewards).filter(rewards.id == reward_id).first()
+    if not reward_item:
+        session.close()
+        return "reward_not_found"
+
+    player = session.query(users).filter(users.id == player_id, users.role == "player").first()
+    if not player:
+        session.close()
+        return "player_not_found"
+
+    already_given = session.query(player_rewards).filter(
+        player_rewards.reward_id == reward_id,
+        player_rewards.player_id == player_id
+    ).first()
+    if already_given:
+        session.close()
+        return "already_assigned"
+
+    completed = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.mission_id == reward_item.mission_id,
+        player_missions.status == "approved"
+    ).first()
+    if not completed:
+        session.close()
+        return "mission_not_completed"
+
+    assigned_entry = player_rewards(
+        reward_id=reward_id,
+        player_id=player_id,
+        assigned_at=datetime.now()
+    )
+    session.add(assigned_entry)
+    session.commit()
+
+    result = {
+        "id": assigned_entry.id,
+        "reward_id": assigned_entry.reward_id,
+        "player_id": assigned_entry.player_id,
+        "assigned_at": str(assigned_entry.assigned_at)
+    }
+
+    session.close()
+    return result
 
 def get_leaderboard():
     session = Session(engine)
@@ -290,8 +377,8 @@ def get_player_profile(player_id: int):
         player_missions.status == "approved"
     ).count()
 
-    total_rewards = session.query(rewards).filter(
-        rewards.assigned_to == player_id
+    total_rewards = session.query(player_rewards).filter(
+        player_rewards.player_id == player_id
     ).count()
 
     result = {
@@ -305,4 +392,4 @@ def get_player_profile(player_id: int):
     }
 
     session.close()
-    return result
+    return result 
