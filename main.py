@@ -62,7 +62,36 @@ def register(data: UserRegister):
 
 @app.post("/auth/login")
 def login(data: UserLogin):
-    pass
+
+    user = functions.verify_login(email=data.email,password=data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+
+    access_token = functions.create_token(
+        user_id=user["user_id"],
+        email=user["email"],
+        role=user["role"],
+        tokentype="access"
+    )
+
+    refresh_token = functions.create_token(
+        user_id=user["user_id"],
+        email=user["email"],
+        role=user["role"],
+        tokentype="refresh"
+    )
+
+    return {
+        "message": "Login successful",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
 
 
 @app.post("/auth/refresh")
