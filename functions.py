@@ -192,7 +192,57 @@ def get_available_rewards():
 
 
 def assign_reward(reward_id: int, player_id: int):
-    pass
+    session = Session(engine)
+
+    reward_item = session.query(rewards).filter(rewards.id == reward_id, rewards.assigned_to == None).first()
+    if not reward_item:
+        session.close()
+        return "reward_not_found"
+
+    player = session.query(users).filter(users.id == player_id, users.role == "player").first()
+    if not player:
+        session.close()
+        return "player_not_found"
+
+    already_given = session.query(rewards).filter(
+        rewards.mission_id == reward_item.mission_id,
+        rewards.name == reward_item.name,
+        rewards.assigned_to == player_id
+    ).first()
+    if already_given:
+        session.close()
+        return "already_assigned"
+
+    completed = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.mission_id == reward_item.mission_id,
+        player_missions.status == "approved"
+    ).first()
+    if not completed:
+        session.close()
+        return "mission_not_completed"
+
+    assigned_entry = rewards(
+        mission_id=reward_item.mission_id,
+        name=reward_item.name,
+        description=reward_item.description,
+        assigned_to=player_id,
+        assigned_at=datetime.now()
+    )
+    session.add(assigned_entry)
+    session.commit()
+
+    result = {
+        "id": assigned_entry.id,
+        "mission_id": assigned_entry.mission_id,
+        "name": assigned_entry.name,
+        "description": assigned_entry.description,
+        "assigned_to": assigned_entry.assigned_to,
+        "assigned_at": str(assigned_entry.assigned_at)
+    }
+
+    session.close()
+    return result
 
 
 def get_leaderboard():
@@ -245,4 +295,4 @@ def get_player_profile(player_id: int):
     }
 
     session.close()
-    return result
+    return result 

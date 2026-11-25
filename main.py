@@ -162,7 +162,24 @@ def list_rewards(token=Header(None)):
 
 @app.post("/rewards/{reward_id}/assign")
 def assign_reward(reward_id: int, player_id: int, token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can assign rewards")
+
+    result = functions.assign_reward(reward_id=reward_id, player_id=player_id)
+
+    if result == "reward_not_found":
+        raise HTTPException(status_code=404, detail="Reward not found")
+    if result == "already_assigned":
+        raise HTTPException(status_code=400, detail="Reward has already been assigned")
+    if result == "player_not_found":
+        raise HTTPException(status_code=404, detail="Player not found")
+    if result == "mission_not_completed":
+        raise HTTPException(status_code=400, detail="Player has not completed and been approved for this mission")
+
+    return result
 
 
 @app.get("/leaderboard")
