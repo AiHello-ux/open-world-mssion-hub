@@ -63,7 +63,6 @@ class rewards(Base):
 Base.metadata.create_all(engine)
 
 
-# Token & Auth Functions (A1 - A3)
 def create_token(user_id: int, email: str, role: str, tokentype: str = "access"):
     if tokentype == "access":
         payload = {
@@ -96,15 +95,22 @@ def verify_token(token: str, tokentype: str = "access"):
         return payload
     return False
 
-def register_user(username: str, email: str, password: str):
-    pass
+def register_user(user_name:str,hashed_password:str, role:str = "player"):
+    session = Session(engine)
+    user_exits=session.query(users).filter_by(user_name=user_name).first()
+    if user_exits is not None:
+        session.close()
+        return False
+    session.add(users(user_name=user_name,password=ph.hash(hashed_password), role=role))
+    session.commit()
+    session.close()
+    return True
 
 
 def verify_login(email: str, password: str):
     pass
 
 
-# Admin & Mission Functions (E1 - E5)
 def create_mission_manager(username: str, email: str, password: str):
     pass
 
@@ -125,7 +131,6 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
     pass
 
 
-# Player Mission & Review Functions (E6 - E10)
 def accept_mission(player_id: int, mission_id: int):
     pass
 
@@ -146,7 +151,7 @@ def get_player_completed_history(player_id: int):
     pass
 
 
-# Rewards, Leaderboard & Profile (E11 - E15)
+
 def create_reward(mission_id: int, name: str, description: str):
     session = Session(engine)
     mission = session.query(missions).filter(missions.id == mission_id).first()
