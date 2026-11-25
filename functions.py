@@ -127,8 +127,45 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
 
 # Player Mission & Review Functions (E6 - E10)
 def accept_mission(player_id: int, mission_id: int):
-    pass
+    session = Session(engine)
 
+    mission = session.query(missions).filter(missions.id == mission_id ).first()
+
+    if not mission:
+        session.close()
+        return {"error": "Mission not found"}
+
+    if not mission.is_active:
+        session.close()
+        return {"error": "Mission is not active"}
+
+    existing = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.mission_id == mission_id,
+        player_missions.status != "rejected"
+    ).first()
+
+    if existing:
+        session.close()
+        return {"error": "Mission already accepted"}
+
+    new_mission = player_missions(
+        player_id=player_id,
+        mission_id=mission_id,
+        status="accepted"
+    )
+
+    session.add(new_mission)
+    session.commit()
+    session.refresh(new_mission)
+
+    result = {
+        "message": "Mission accepted successfully",
+        "player_mission_id": new_mission.id
+    }
+
+    session.close()
+    return result
 
 def get_player_accepted_missions(player_id: int):
     pass
