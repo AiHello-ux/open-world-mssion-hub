@@ -190,7 +190,28 @@ def get_player_accepted_missions(player_id: int):
 
 
 def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
-    pass
+    session = Session(engine)
+
+    mission = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.mission_id == mission_id
+    ).first()
+
+    if not mission:
+        session.close()
+        return {"error": "Mission not found"}
+
+    if mission.status != "accepted":
+        session.close()
+        return {"error": "Mission cannot be submitted"}
+
+    mission.submission_details = submission_details
+    mission.status = "submitted"
+
+    session.commit()
+    session.close()
+
+    return {"message": "Mission submitted successfully"}
 
 
 def review_mission_completion(submission_id: int, status: str):
