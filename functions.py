@@ -169,9 +169,7 @@ def accept_mission(player_id: int, mission_id: int):
 def get_player_accepted_missions(player_id: int):
     session = Session(engine)
 
-    result = session.query(player_missions).filter(
-        player_missions.player_id == player_id,
-        player_missions.status == "accepted").all()
+    result = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.status == "accepted").all()
 
     missions_list = []
 
@@ -190,9 +188,7 @@ def get_player_accepted_missions(player_id: int):
 def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
     session = Session(engine)
 
-    mission = session.query(player_missions).filter(
-        player_missions.player_id == player_id,
-        player_missions.mission_id == mission_id).first()
+    mission = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
 
     if not mission:
         session.close()
@@ -214,9 +210,7 @@ def submit_mission_completion(player_id: int, mission_id: int, submission_detail
 def review_mission_completion(submission_id: int, status: str):
     session = Session(engine)
 
-    submission = session.query(player_missions).filter(
-        player_missions.id == submission_id
-    ).first()
+    submission = session.query(player_missions).filter(player_missions.id == submission_id).first()
 
     if not submission:
         session.close()
@@ -233,13 +227,9 @@ def review_mission_completion(submission_id: int, status: str):
     submission.status = status
 
     if status == "completed":
-        player = session.query(users).filter(
-            users.id == submission.player_id
-        ).first()
+        player = session.query(users).filter(users.id == submission.player_id).first()
 
-        mission = session.query(missions).filter(
-            missions.id == submission.mission_id
-        ).first()
+        mission = session.query(missions).filter(missions.id == submission.mission_id).first()
 
         if player and mission:
             player.xp += int(mission.reward)
@@ -255,10 +245,7 @@ def review_mission_completion(submission_id: int, status: str):
 def get_player_completed_history(player_id: int):
     session = Session(engine)
 
-    result = session.query(player_missions).filter(
-        player_missions.player_id == player_id,
-        player_missions.status == "completed"
-    ).all()
+    result = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.status == "completed").all()
 
     history = []
 
