@@ -222,5 +222,12 @@ docker run -p 8001:8001 image_name
 | `mission_id` | Integer | Foreign Key (`missions.id`) |
 | `name` | String | Not Null |
 | `description` | String | Not Null |
-| `assigned_to` | Integer | Foreign Key (`users.id`), Nullable |
-| `assigned_at` | DateTime | Nullable |
+
+### Table 5: `player_rewards`
+
+| Column | Type | Constraints |
+|:---|:---|:---|
+| `id` | Integer | Primary Key |
+| `reward_id` | Integer | Foreign Key (`rewards.id`) |
+| `player_id` | Integer | Foreign Key (`users.id`) |
+| `assigned_at` | DateTime | Default: `TIME` |
