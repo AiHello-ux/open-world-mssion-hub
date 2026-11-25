@@ -97,22 +97,33 @@ def add_mission_manager(data: UserRegister, token=Header(None)):
         raise HTTPException(status_code=400, detail="Mission Manager already exists")
     return {"message": "Mission Manager created successfully"}
 
-
-
 @app.post("/missions")
 def add_mission(data: MissionCreate, token=Header(None)):
-    pass
-
+    payload = functions.verify_token(token=token, tokentype="access")
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if payload.get("role") != "mission_manager":
+        raise HTTPException(status_code=403, detail="Mission Manager access required")
+    
+    result = functions.create_mission(
+        created_by=payload.get("user_id"),
+        title=data.title,
+        description=data.description,
+        difficulty=data.difficulty,
+        location=data.location,
+        reward=data.reward
+    )
+    if result is False:
+        raise HTTPException(status_code=400, detail="Mission already exists")
+    return {"message": "Mission created successfully"}
 
 @app.get("/missions")
 def list_missions(difficulty: str = None, location: str = None, token=Header(None)):
     pass
 
-
 @app.get("/missions/{mission_id}")
 def get_mission(mission_id: int, token=Header(None)):
     pass
-
 
 @app.patch("/missions/{mission_id}")
 def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
