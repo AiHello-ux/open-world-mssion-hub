@@ -142,8 +142,7 @@ def accept_mission(player_id: int, mission_id: int):
     existing = session.query(player_missions).filter(
         player_missions.player_id == player_id,
         player_missions.mission_id == mission_id,
-        player_missions.status != "rejected"
-    ).first()
+        player_missions.status != "rejected").first()
 
     if existing:
         session.close()
@@ -172,8 +171,7 @@ def get_player_accepted_missions(player_id: int):
 
     result = session.query(player_missions).filter(
         player_missions.player_id == player_id,
-        player_missions.status == "accepted"
-    ).all()
+        player_missions.status == "accepted").all()
 
     missions_list = []
 
@@ -194,8 +192,7 @@ def submit_mission_completion(player_id: int, mission_id: int, submission_detail
 
     mission = session.query(player_missions).filter(
         player_missions.player_id == player_id,
-        player_missions.mission_id == mission_id
-    ).first()
+        player_missions.mission_id == mission_id).first()
 
     if not mission:
         session.close()
