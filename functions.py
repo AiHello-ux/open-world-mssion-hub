@@ -83,7 +83,6 @@ def create_token(user_id: int, email: str, role: str, tokentype: str = "access")
     token = jwt.encode(payload=payload, key=SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-
 def verify_token(token: str, tokentype: str = "access"):
     if not token:
         return False
@@ -106,9 +105,19 @@ def register_user(user_name:str,hashed_password:str, role:str = "player"):
     session.close()
     return True
 
-
-def verify_ (email: str, password: str):
-    pass
+def verify_login(email: str, password: str):
+    session = Session(engine)
+    user = session.query(users).filter(users.email == email).first()
+    if not user:
+        session.close()
+        return False
+    try:
+        ph.verify(user.password, password)
+    except VerifyMismatchError:
+        session.close()
+        return False
+    session.close()
+    return True
 
 
 def create_mission_manager(username: str, email: str, password: str):
@@ -121,7 +130,6 @@ def create_mission_manager(username: str, email: str, password: str):
     session.commit()
     session.close()
     return True
-
 
 def create_mission(created_by: int, title: str, description: str, difficulty: str, location: str, reward: str):
     session = Session(engine)
@@ -171,29 +179,37 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
     if not mission:
         session.close()
         return None
-    
+    if title is not None:
+        mission.title = title
+    if description is not None:
+        mission.description = description
+    if difficulty is not None:
+        mission.difficulty = difficulty
+    if location is not None:
+        mission.location = location
+    if reward is not None:
+        mission.reward = reward
+    if is_active is not None:
+        mission.is_active = is_active
+    session.commit()
+    session.close()
+    return True
 
 
 def accept_mission(player_id: int, mission_id: int):
     pass
 
-
 def get_player_accepted_missions(player_id: int):
     pass
-
 
 def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
     pass
 
-
 def review_mission_completion(submission_id: int, status: str):
     pass
 
-
 def get_player_completed_history(player_id: int):
     pass
-
-
 
 def create_reward(mission_id: int, name: str, description: str):
     session = Session(engine)
@@ -221,7 +237,6 @@ def create_reward(mission_id: int, name: str, description: str):
     session.close()
     return result
 
-
 def get_available_rewards():
     session = Session(engine)
     available = session.query(rewards).filter(rewards.assigned_to == None).all()
@@ -238,10 +253,8 @@ def get_available_rewards():
     session.close()
     return result
 
-
 def assign_reward(reward_id: int, player_id: int):
     pass
-
 
 def get_leaderboard():
     session = Session(engine)
@@ -261,7 +274,6 @@ def get_leaderboard():
     session.close()
     return result
     
-
 def get_player_profile(player_id: int):
     session = Session(engine)
     player = session.query(users).filter(users.id == player_id, users.role == "player").first()
