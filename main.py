@@ -87,7 +87,7 @@ def refresh(refresh_token: str):
 def add_mission_manager(data: UserRegister, token=Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail=" Token Missing")
-    payload= functions.verify_login(token=token, tokentype="access")
+    payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "admin":
@@ -104,16 +104,18 @@ def add_mission(data: MissionCreate, token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "mission_manager":
         raise HTTPException(status_code=403, detail="Mission Manager access required")
-    
+    if data.difficulty.lower() not in VALID_DIFFICULTIES:
+        raise HTTPException(status_code=400, detail="Invalid difficulty ,Choose from easy, medium, hard, special")
+
     result = functions.create_mission(
         created_by=payload.get("user_id"),
         title=data.title,
         description=data.description,
-        difficulty=data.difficulty,
+        difficulty=data.difficulty.lower(),
         location=data.location,
         reward=data.reward
     )
-    if result is False:
+    if not result:
         raise HTTPException(status_code=400, detail="Mission already exists")
     return {"message": "Mission created successfully"}
 

@@ -146,20 +146,33 @@ def create_mission(created_by: int, title: str, description: str, difficulty: st
     session.add(missions(title=title, description=description, difficulty=difficulty, location=location, reward=reward, created_by=created_by))
     session.commit()
     session.close()
+    return True
 
 def get_all_missions(difficulty: str = None, location: str = None):
     session = Session(engine)
-    difficulty_filteration=session.query(missions).filter_by(difficulty=difficulty).all() 
-    location_filteration=session.query(missions).filter_by(location=location).all()
-    if  difficulty_filteration :
-        session.close()
-        return difficulty_filteration
-    if location_filteration:
-        session.close()
-        return location_filteration
-    all_missions = session.query(missions).all()
+    query = session.query(missions).filter(missions.is_active == True)
+
+    if difficulty is not None:
+        query = query.filter(missions.difficulty == difficulty.lower())
+    if location is not None:
+        query = query.filter(missions.location == location)
+
+    available_missions = query.all()
+    result = []
+    for mission in available_missions:
+        result.append({
+            "id": mission.id,
+            "title": mission.title,
+            "description": mission.description,
+            "difficulty": mission.difficulty,
+            "location": mission.location,
+            "reward": mission.reward,
+            "is_active": mission.is_active,
+            "created_by": mission.created_by
+        })
+
     session.close()
-    return all_missions
+    return result
 
 def get_mission_by_id(mission_id: int):
     session = Session(engine)
