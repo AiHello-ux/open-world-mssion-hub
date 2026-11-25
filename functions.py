@@ -253,7 +253,26 @@ def review_mission_completion(submission_id: int, status: str):
 
 
 def get_player_completed_history(player_id: int):
-    pass
+    session = Session(engine)
+
+    result = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.status == "completed"
+    ).all()
+
+    history = []
+
+    for item in result:
+        history.append({
+            "id": item.id,
+            "mission_id": item.mission_id,
+            "submission_details": item.submission_details,
+            "status": item.status,
+            "completed_at": item.completed_at
+        })
+
+    session.close()
+    return history
 
 
 # Rewards, Leaderboard & Profile (E11 - E15)
