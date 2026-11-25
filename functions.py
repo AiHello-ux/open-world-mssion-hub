@@ -99,9 +99,47 @@ def verify_token(token: str, tokentype: str = "access"):
 def register_user(username: str, email: str, password: str):
     pass
 
-
 def verify_login(email: str, password: str):
-    pass
+    session = Session(engine)
+
+    user = session.query(users).filter(users.email == email).first()
+
+    if not user:
+        session.close()
+        return {"error": "User not found"}
+
+    try:
+        ph.verify(user.hashed_password, password)
+    except VerifyMismatchError:
+        session.close()
+        return {"error": "Incorrect password"}
+
+    access_token = create_token(
+        user.id,
+        user.email,
+        user.role,
+        "access"
+    )
+
+    refresh_token = create_token(
+        user.id,
+        user.email,
+        user.role,
+        "refresh"
+    )
+
+    result = {
+        "message": "Login successful",
+        "user_id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+    session.close()
+    return result
 
 
 # Admin & Mission Functions (E1 - E5)
