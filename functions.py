@@ -107,28 +107,31 @@ def register_user(user_name:str,hashed_password:str, role:str = "player"):
     return True
 
 
-def verify_login(email: str, password: str):
+def verify_ (email: str, password: str):
     pass
 
 
 def create_mission_manager(username: str, email: str, password: str):
-    pass
+    session=Session(engine)
+    user_exists=session.query(users).filter_by(email=email).first()
+    if user_exists is not None:
+        session.close()
+        return False
+    session.add(users(username=username, email=email, hashed_password=ph.hash(password), role="mission_manager"))
+    session.commit()
+    session.close()
+    return True
 
 
-def create_mission(created_by: int, title: str, description: str, difficulty: str, location: str, reward: str):
-    pass
-
-
-def get_all_missions(difficulty: str = None, location: str = None):
-    pass
-
-
-def get_mission_by_id(mission_id: int):
-    pass
 
 
 def update_mission(mission_id: int, title: str = None, description: str = None, difficulty: str = None, location: str = None, reward: str = None, is_active: bool = None):
-    pass
+    session = Session(engine)
+    mission = session.query(missions).filter(missions.id == mission_id).first()
+    if not mission:
+        session.close()
+        return None
+    
 
 
 def accept_mission(player_id: int, mission_id: int):

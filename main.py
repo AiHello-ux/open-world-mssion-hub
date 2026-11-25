@@ -85,7 +85,18 @@ def refresh(refresh_token: str):
 # E1 - E5: Admin & Mission APIs
 @app.post("/admin/mission-managers")
 def add_mission_manager(data: UserRegister, token=Header(None)):
-    pass
+    if not token:
+        raise HTTPException(status_code=401, detail=" Token Missing")
+    payload= functions.verify_login(token=token, tokentype="access")
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    add_mission_manager =functions.create_mission_manager(username=data.username, email=data.email, password=data.password)
+    if not add_mission_manager:
+        raise HTTPException(status_code=400, detail="Mission Manager already exists")
+    return {"message": "Mission Manager created successfully"}
+
 
 
 @app.post("/missions")
