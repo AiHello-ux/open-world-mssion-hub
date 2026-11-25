@@ -157,6 +157,8 @@ def list_rewards(token=Header(None)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
+    if user["role"] == "player":
+        return functions.get_available_rewards(player_id=user["user_id"])
     return functions.get_available_rewards()
 
 

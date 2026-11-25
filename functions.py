@@ -56,8 +56,14 @@ class rewards(Base):
     mission_id = Column(Integer, ForeignKey("missions.id"))
     name = Column(String)
     description = Column(String)
-    assigned_to = Column(Integer, ForeignKey("users.id"))
-    assigned_at = Column(DateTime)
+
+
+class player_rewards(Base):
+    __tablename__ = "player_rewards"
+    id = Column(Integer, primary_key=True)
+    reward_id = Column(Integer, ForeignKey("rewards.id"))
+    player_id = Column(Integer, ForeignKey("users.id"))
+    assigned_at = Column(DateTime, default=datetime.now)
 
 
 Base.metadata.create_all(engine)
@@ -166,26 +172,31 @@ def create_reward(mission_id: int, name: str, description: str):
         "id": new_reward.id,
         "mission_id": new_reward.mission_id,
         "name": new_reward.name,
-        "description": new_reward.description,
-        "assigned_to": new_reward.assigned_to
+        "description": new_reward.description
     }
 
     session.close()
     return result
 
 
-def get_available_rewards():
+def get_available_rewards(player_id: int = None):
     session = Session(engine)
-    available = session.query(rewards).filter(rewards.assigned_to == None).all()
+    all_rewards = session.query(rewards).all()
+
+    claimed_ids = []
+    if player_id:
+        claimed = session.query(player_rewards).filter(player_rewards.player_id == player_id).all()
+        claimed_ids = [item.reward_id for item in claimed]
 
     result = []
-    for item in available:
-        result.append({
-            "id": item.id,
-            "mission_id": item.mission_id,
-            "name": item.name,
-            "description": item.description
-        })
+    for item in all_rewards:
+        if item.id not in claimed_ids:
+            result.append({
+                "id": item.id,
+                "mission_id": item.mission_id,
+                "name": item.name,
+                "description": item.description
+            })
 
     session.close()
     return result
@@ -194,7 +205,7 @@ def get_available_rewards():
 def assign_reward(reward_id: int, player_id: int):
     session = Session(engine)
 
-    reward_item = session.query(rewards).filter(rewards.id == reward_id, rewards.assigned_to == None).first()
+    reward_item = session.query(rewards).filter(rewards.id == reward_id).first()
     if not reward_item:
         session.close()
         return "reward_not_found"
@@ -204,10 +215,9 @@ def assign_reward(reward_id: int, player_id: int):
         session.close()
         return "player_not_found"
 
-    already_given = session.query(rewards).filter(
-        rewards.mission_id == reward_item.mission_id,
-        rewards.name == reward_item.name,
-        rewards.assigned_to == player_id
+    already_given = session.query(player_rewards).filter(
+        player_rewards.reward_id == reward_id,
+        player_rewards.player_id == player_id
     ).first()
     if already_given:
         session.close()
@@ -222,11 +232,9 @@ def assign_reward(reward_id: int, player_id: int):
         session.close()
         return "mission_not_completed"
 
-    assigned_entry = rewards(
-        mission_id=reward_item.mission_id,
-        name=reward_item.name,
-        description=reward_item.description,
-        assigned_to=player_id,
+    assigned_entry = player_rewards(
+        reward_id=reward_id,
+        player_id=player_id,
         assigned_at=datetime.now()
     )
     session.add(assigned_entry)
@@ -234,10 +242,8 @@ def assign_reward(reward_id: int, player_id: int):
 
     result = {
         "id": assigned_entry.id,
-        "mission_id": assigned_entry.mission_id,
-        "name": assigned_entry.name,
-        "description": assigned_entry.description,
-        "assigned_to": assigned_entry.assigned_to,
+        "reward_id": assigned_entry.reward_id,
+        "player_id": assigned_entry.player_id,
         "assigned_at": str(assigned_entry.assigned_at)
     }
 
@@ -280,8 +286,8 @@ def get_player_profile(player_id: int):
         player_missions.status == "approved"
     ).count()
 
-    total_rewards = session.query(rewards).filter(
-        rewards.assigned_to == player_id
+    total_rewards = session.query(player_rewards).filter(
+        player_rewards.player_id == player_id
     ).count()
 
     result = {
