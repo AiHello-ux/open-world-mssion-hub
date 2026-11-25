@@ -135,12 +135,29 @@ def player_history(player_id: int, token=Header(None)):
 # E11 - E15: Rewards, Leaderboard & Profile
 @app.post("/missions/{mission_id}/rewards")
 def add_reward(mission_id: int, data: RewardCreate, token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if user["role"] != "mission_manager":
+        raise HTTPException(status_code=403, detail="Only mission managers can create rewards")
 
+    result = functions.create_reward(
+        mission_id=mission_id,
+        name=data.name,
+        description=data.description
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    return result
 
 @app.get("/rewards")
 def list_rewards(token=Header(None)):
-    pass
+    user = functions.verify_token(token=token, tokentype="access")
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return functions.get_available_rewards()
 
 
 @app.post("/rewards/{reward_id}/assign")
