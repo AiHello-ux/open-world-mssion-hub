@@ -168,7 +168,25 @@ def accept_mission(player_id: int, mission_id: int):
     return result
 
 def get_player_accepted_missions(player_id: int):
-    pass
+    session = Session(engine)
+
+    result = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.status == "accepted"
+    ).all()
+
+    missions_list = []
+
+    for item in result:
+        missions_list.append({
+            "id": item.id,
+            "mission_id": item.mission_id,
+            "status": item.status,
+            "accepted_at": item.accepted_at
+        })
+
+    session.close()
+    return missions_list
 
 
 def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
