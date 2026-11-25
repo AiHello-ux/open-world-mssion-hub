@@ -133,6 +133,19 @@ def create_mission(created_by: int, title: str, description: str, difficulty: st
     session.commit()
     session.close()
 
+def get_all_missions(difficulty: str = None, location: str = None):
+    session = Session(engine)
+    difficulty_filteration=session.query(missions).filter_by(difficulty=difficulty).all() 
+    location_filteration=session.query(missions).filter_by(location=location).all()
+    if  difficulty_filteration :
+        session.close()
+        return difficulty_filteration
+    if location_filteration:
+        session.close()
+        return location_filteration
+    all_missions = session.query(missions).all()
+    session.close()
+    return all_missions
 
 def update_mission(mission_id: int, title: str = None, description: str = None, difficulty: str = None, location: str = None, reward: str = None, is_active: bool = None):
     session = Session(engine)
