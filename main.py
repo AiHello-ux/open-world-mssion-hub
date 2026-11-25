@@ -139,8 +139,24 @@ def get_mission(mission_id: int, token=Header(None)):
 
 @app.patch("/missions/{mission_id}")
 def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
-    pass
-
+    payload = functions.verify_token(token=token, tokentype="access")
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if payload.get("role") != "mission_manager":
+        raise HTTPException(status_code=403, detail="Mission Manager access required")
+    
+    updated = functions.update_mission(
+        mission_id=mission_id,
+        title=data.title,
+        description=data.description,
+        difficulty=data.difficulty,
+        location=data.location,
+        reward=data.reward,
+        is_active=data.is_active
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return {"message": "Mission updated successfully"}
 
 # E6 - E10: Player Mission & Review APIs
 @app.post("/missions/{mission_id}/accept")
