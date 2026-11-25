@@ -123,6 +123,15 @@ def create_mission_manager(username: str, email: str, password: str):
     return True
 
 
+def create_mission(created_by: int, title: str, description: str, difficulty: str, location: str, reward: str):
+    session = Session(engine)
+    create_mission=session.query(missions).filter_by(title=title, location=location).first()
+    if create_mission is not None:
+        session.close()
+        return False
+    session.add(missions(title=title, description=description, difficulty=difficulty, location=location, reward=reward, created_by=created_by))
+    session.commit()
+    session.close()
 
 
 def update_mission(mission_id: int, title: str = None, description: str = None, difficulty: str = None, location: str = None, reward: str = None, is_active: bool = None):
