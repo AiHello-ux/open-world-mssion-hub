@@ -119,11 +119,23 @@ def add_mission(data: MissionCreate, token=Header(None)):
 
 @app.get("/missions")
 def list_missions(difficulty: str = None, location: str = None, token=Header(None)):
-    pass
+    payload = functions.verify_token(token=token, tokentype="access")
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    missions_list = functions.get_all_missions(difficulty=difficulty, location=location)
+    return {"missions": missions_list}
 
 @app.get("/missions/{mission_id}")
 def get_mission(mission_id: int, token=Header(None)):
-    pass
+    payload = functions.verify_token(token=token, tokentype="access")
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    mission = functions.get_mission_by_id(mission_id=mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return mission
 
 @app.patch("/missions/{mission_id}")
 def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
