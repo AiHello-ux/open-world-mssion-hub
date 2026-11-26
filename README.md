@@ -106,6 +106,7 @@
 
 1. Task 1: Updated assign_reward and get_player_profile to support both "approved" and "completed" mission statuses for teammate compatibility.
 2. Task 2: Tested the endpoints
+3. Task 3: Added pytest is CI/CD
 ---
 
 ## 3. Live App
