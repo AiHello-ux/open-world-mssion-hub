@@ -147,7 +147,7 @@ def add_mission(data: MissionCreate, token=Header(None)):
         created_by=payload.get("user_id"),
         title=data.title,
         description=data.description,
-        difficulty=data.difficulty.lower(),
+        difficulty=data.difficulty,
         location=data.location,
         reward=data.reward
     )
