@@ -176,34 +176,58 @@ docker run -p 8001:8001 image_name
 
 ## 7. Database
 
-### Table 1: `table_name`
+### Table 1: `users`
 
 | Column | Type | Constraints |
 |:---|:---|:---|
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
+| `id` | Integer | Primary Key |
+| `username` | String | Not Null |
+| `email` | String | Unique, Not Null |
+| `hashed_password` | String | Not Null |
+| `role` | String | Default: `'player'` |
+| `xp` | Integer | Default: `0` |
+| `created_at` | DateTime | Default: `TIME` |
 
-### Table 2: `table_name`
-
-| Column | Type | Constraints |
-|:---|:---|:---|
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-
-### Table 3: `table_name`
+### Table 2: `missions`
 
 | Column | Type | Constraints |
 |:---|:---|:---|
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
-| `column_name` | | |
+| `id` | Integer | Primary Key |
+| `title` | String | Not Null |
+| `description` | String | Not Null |
+| `difficulty` | String | Not Null |
+| `location` | String | Not Null |
+| `reward` | String | Not Null |
+| `is_active` | Boolean | Default: `True` |
+| `created_by` | Integer | Foreign Key (`users.id`) |
+| `created_at` | DateTime | Default: `TIME` |
+
+### Table 3: `player_missions`
+
+| Column | Type | Constraints |
+|:---|:---|:---|
+| `id` | Integer | Primary Key |
+| `player_id` | Integer | Foreign Key (`users.id`) |
+| `mission_id` | Integer | Foreign Key (`missions.id`) |
+| `status` | String | Default: `'accepted'` |
+| `submission_details` | String | Nullable |
+| `accepted_at` | DateTime | Default: `TIME` |
+| `completed_at` | DateTime | Nullable |
+
+### Table 4: `rewards`
+
+| Column | Type | Constraints |
+|:---|:---|:---|
+| `id` | Integer | Primary Key |
+| `mission_id` | Integer | Foreign Key (`missions.id`) |
+| `name` | String | Not Null |
+| `description` | String | Not Null |
+
+### Table 5: `player_rewards`
+
+| Column | Type | Constraints |
+|:---|:---|:---|
+| `id` | Integer | Primary Key |
+| `reward_id` | Integer | Foreign Key (`rewards.id`) |
+| `player_id` | Integer | Foreign Key (`users.id`) |
+| `assigned_at` | DateTime | Default: `TIME` |
