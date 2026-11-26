@@ -56,8 +56,8 @@ class RewardCreate(BaseModel):
 
 # A1 - A3: Authentication APIs
 @app.post("/register")
-def register(data: UserLogin):
-    if functions.register_user(user_name=data.username, password=data.password, role="player"):
+def register(data: UserRegister):
+    if functions.register_user(username=data.username, email=data.email, password=data.password, role="player"):
         return {"message": "user registered successfully"}
     raise HTTPException(status_code=400, detail="User already exists")
 

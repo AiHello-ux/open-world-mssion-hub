@@ -100,13 +100,13 @@ def verify_token(token: str, tokentype: str = "access"):
         return payload
     return False
 
-def register_user(user_name:str,hashed_password:str, role:str = "player"):
+def register_user(username: str, email: str, password: str, role: str = "player"):
     session = Session(engine)
-    user_exits=session.query(users).filter_by(user_name=user_name).first()
-    if user_exits is not None:
+    user_exists = session.query(users).filter_by(email=email).first()
+    if user_exists is not None:
         session.close()
         return False
-    session.add(users(user_name=user_name,password=ph.hash(hashed_password), role=role))
+    session.add(users(username=username, email=email, hashed_password=ph.hash(password), role=role))
     session.commit()
     session.close()
     return True
