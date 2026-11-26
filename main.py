@@ -233,24 +233,29 @@ def accept_mission(mission_id: int, token: str = Header(None)):
     return result
 
 
-@app.get("/players/me/missions")
-def my_accepted_missions(token=Header(None)):
-    if not token:
-        raise HTTPException(status_code=401, detail="Token Missing")
 
-    payload = functions.verify_login(token=token, tokentype="access")
+@app.get("/players/me/missions")
+def my_missions(token: str = Header(None)):
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Token missing")
+
+    payload = functions.verify_token(
+        token=token,
+        tokentype="access"
+    )
 
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    if payload.get("role") != "player":
-        raise HTTPException(status_code=403, detail="Player access required")
+    player_id = payload["user_id"]
 
-    result = functions.get_player_accepted_missions(
-        player_id=payload["user_id"]
+    result = functions.get_player_missions(
+        player_id=player_id
     )
 
     return result
+
 
 @app.post("/missions/{mission_id}/submit")
 def submit_mission(mission_id: int, submission_details: str, token=Header(None)):
