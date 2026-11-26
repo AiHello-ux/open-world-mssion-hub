@@ -118,12 +118,17 @@ def verify_login(email: str, password: str):
         session.close()
         return False
     try:
-        ph.verify(user.password, password)
+        ph.verify(user.hashed_password, password)
     except VerifyMismatchError:
         session.close()
         return False
+    result = {
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role
+    }
     session.close()
-    return True
+    return result
 
 
 def create_mission_manager(username: str, email: str, password: str):
