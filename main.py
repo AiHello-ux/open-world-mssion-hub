@@ -205,13 +205,14 @@ def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
     return {"message": "Mission updated successfully"}
 
 # E6 - E10: Player Mission & Review APIs
+
 @app.post("/missions/{mission_id}/accept")
-def accept_mission(mission_id: int, token=Header(None)):
+def accept_mission(mission_id: int, token: str = Header(None)):
 
     if not token:
-        raise HTTPException(status_code=401, detail="Token Missing")
+        raise HTTPException(status_code=401, detail="Token missing")
 
-    payload = functions.verify_login(
+    payload = functions.verify_token(
         token=token,
         tokentype="access"
     )
@@ -219,11 +220,10 @@ def accept_mission(mission_id: int, token=Header(None)):
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    if payload.get("role") != "player":
-        raise HTTPException(status_code=403, detail="Only players can accept missions")
+    player_id = payload["user_id"]
 
     result = functions.accept_mission(
-        player_id=payload["user_id"],
+        player_id=player_id,
         mission_id=mission_id
     )
 
@@ -231,6 +231,7 @@ def accept_mission(mission_id: int, token=Header(None)):
         raise HTTPException(status_code=400, detail=result["error"])
 
     return result
+
 
 @app.get("/players/me/missions")
 def my_accepted_missions(token=Header(None)):

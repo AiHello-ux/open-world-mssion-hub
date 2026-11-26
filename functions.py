@@ -239,7 +239,10 @@ def accept_mission(player_id: int, mission_id: int):
         session.close()
         return {"error": "Mission is not active"}
 
-    existing = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id,player_missions.status == "accepted").first()
+    existing = session.query(player_missions).filter(
+        player_missions.player_id == player_id,
+        player_missions.mission_id == mission_id
+    ).first()
 
     if existing:
         session.close()
@@ -254,11 +257,10 @@ def accept_mission(player_id: int, mission_id: int):
     session.add(new_mission)
     session.commit()
 
-    result = new_mission.id
-
     session.close()
 
-    return {"message": "Mission accepted successfully", "id": result}
+    return {"message": "Mission accepted successfully"}
+
 
 
 
