@@ -212,20 +212,14 @@ def accept_mission(mission_id: int, token: str = Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
-    payload = functions.verify_token(
-        token=token,
-        tokentype="access"
-    )
+    payload = functions.verify_token(token=token,tokentype="access")
 
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     player_id = payload["user_id"]
 
-    result = functions.accept_mission(
-        player_id=player_id,
-        mission_id=mission_id
-    )
+    result = functions.accept_mission(player_id=player_id,mission_id=mission_id)
 
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
@@ -240,70 +234,92 @@ def my_missions(token: str = Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
-    payload = functions.verify_token(
-        token=token,
-        tokentype="access"
-    )
+    payload = functions.verify_token(token=token,tokentype="access")
 
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     player_id = payload["user_id"]
 
-    result = functions.get_player_missions(
-        player_id=player_id
-    )
+    result = functions.get_player_missions(player_id=player_id)
 
     return result
 
 
 @app.post("/missions/{mission_id}/submit")
-def submit_mission(mission_id: int, submission_details: str, token=Header(None)):
-    if not token:
-        raise HTTPException(status_code=401, detail="Token Missing")
+def submit_mission(mission_id: int,submission_details: str,token: str = Header(None)):
 
-    payload = functions.verify_login(token=token, tokentype="access")
+    if not token:
+        raise HTTPException(status_code=401, detail="Token missing")
+
+    payload = functions.verify_token(token=token,tokentype="access")
 
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    if payload.get("role") != "player":
-        raise HTTPException(status_code=403, detail="Player access required")
+    player_id = payload["user_id"]
 
-    result = functions.submit_mission_completion(
-        player_id=payload["user_id"],
-        mission_id=mission_id,
-        submission_details=submission_details
-    )
+    result = functions.submit_mission(player_id=player_id,mission_id=mission_id,submission_details=submission_details)
 
-    if not result:
-        raise HTTPException(status_code=400, detail="Unable to submit mission")
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
 
     return result
+
+
 
 @app.patch("/submissions/{submission_id}/review")
-def review_submission(submission_id: int, status: str, token=Header(None)):
-    if not token:
-        raise HTTPException(status_code=401, detail="Token Missing")
+def review_mission_completion(
+    submission_id: int,
+    status: str,
+    token: str = Header(None)
+):
 
-@app.get("/players/{player_id}/history")
-def player_history(player_id: int, token=Header(None)):
     if not token:
-        raise HTTPException(status_code=401, detail="Token Missing")
+        raise HTTPException(status_code=401,detail="Token missing")
 
-    payload = functions.verify_login(token=token, tokentype="access")
+    payload = functions.verify_token(token=token,tokentype="access")
 
     if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code=401,detail="Invalid or expired token")
 
-    if payload.get("role") != "admin" and payload.get("user_id") != player_id:
-        raise HTTPException(status_code=403, detail="Access denied")
+    if payload.get("role") != "mission_manager":
+        raise HTTPException(status_code=403,detail="Only mission managers can review submissions")
 
-    result = functions.get_player_completed_history(
-        player_id=player_id
-    )
+    result = functions.review_mission_completion(submission_id=submission_id,status=status)
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=400,
+            detail=result["error"]
+        )
 
     return result
+
+
+
+@app.get("/players/{player_id}/history")
+def get_player_completed_history(
+    player_id: int,
+    token: str = Header(None)
+):
+
+    if not token:
+        raise HTTPException(status_code=401,detail="Token missing")
+
+    payload = functions.verify_token(token=token,tokentype="access")
+
+    if not payload:
+        raise HTTPException(status_code=401,detail="Invalid or expired token")
+
+    if payload.get("role") != "admin" and payload.get("user_id") != player_id:
+        raise HTTPException(status_code=403,detail="You cannot access another player's history")
+
+    result = functions.get_player_completed_history(player_id=player_id)
+
+    return result
+
+
 
 
 

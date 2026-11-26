@@ -227,9 +227,7 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
 def accept_mission(player_id: int, mission_id: int):
     session = Session(engine)
 
-    mission = session.query(missions).filter(
-        missions.id == mission_id
-    ).first()
+    mission = session.query(missions).filter(missions.id == mission_id).first()
 
     if not mission:
         session.close()
@@ -239,20 +237,13 @@ def accept_mission(player_id: int, mission_id: int):
         session.close()
         return {"error": "Mission is not active"}
 
-    existing = session.query(player_missions).filter(
-        player_missions.player_id == player_id,
-        player_missions.mission_id == mission_id
-    ).first()
+    existing = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
 
     if existing:
         session.close()
         return {"error": "Mission already accepted"}
 
-    new_mission = player_missions(
-        player_id=player_id,
-        mission_id=mission_id,
-        status="accepted"
-    )
+    new_mission = player_missions(player_id=player_id,mission_id=mission_id,status="accepted")
 
     session.add(new_mission)
     session.commit()
@@ -266,10 +257,7 @@ def accept_mission(player_id: int, mission_id: int):
 def get_player_missions(player_id: int):
     session = Session(engine)
 
-    result = session.query(player_missions).filter(
-        player_missions.player_id == player_id,
-        player_missions.status == "accepted"
-    ).all()
+    result = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.status == "accepted").all()
 
     missions_list = []
 
@@ -286,14 +274,14 @@ def get_player_missions(player_id: int):
 
   
 
-def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
+def submit_mission(player_id: int, mission_id: int, submission_details: str):
     session = Session(engine)
 
     mission = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
 
     if not mission:
         session.close()
-        return {"error": "Mission not found"}
+        return {"error": "Mission not accepted"}
 
     if mission.status != "accepted":
         session.close()
@@ -307,6 +295,8 @@ def submit_mission_completion(player_id: int, mission_id: int, submission_detail
 
     return {"message": "Mission submitted successfully"}
 
+
+
 def review_mission_completion(submission_id: int, status: str):
     session = Session(engine)
 
@@ -318,7 +308,7 @@ def review_mission_completion(submission_id: int, status: str):
 
     if submission.status != "submitted":
         session.close()
-        return {"error": "Mission is not submitted"}
+        return {"error": "Submission is not pending review"}
 
     if status not in ["completed", "rejected"]:
         session.close()
@@ -327,18 +317,30 @@ def review_mission_completion(submission_id: int, status: str):
     submission.status = status
 
     if status == "completed":
-        player = session.query(users).filter(users.id == submission.player_id).first()
 
         mission = session.query(missions).filter(missions.id == submission.mission_id).first()
 
-        if player and mission:
-            player.xp += int(mission.reward)
-            submission.completed_at = datetime.now()
+        if not mission:
+            session.close()
+            return {"error": "Mission not found"}
+
+        player = session.query(users).filter(users.id == submission.player_id).first()
+
+        if not player:
+            session.close()
+            return {"error": "Player not found"}
+
+        player.xp += int(mission.reward)
+        submission.completed_at = datetime.now()
 
     session.commit()
     session.close()
 
-    return {"message": "Mission reviewed successfully"}
+    return {
+        "message": "Mission submission reviewed successfully",
+        "status": status
+    }
+
     
 
 def get_player_completed_history(player_id: int):
@@ -358,7 +360,10 @@ def get_player_completed_history(player_id: int):
         })
 
     session.close()
+
     return history
+
+
 
 def create_reward(mission_id: int, name: str, description: str):
     session = Session(engine)
