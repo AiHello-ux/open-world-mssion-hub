@@ -64,9 +64,9 @@
 
 **Naman**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1: Set up project dependencies and built JWT token utilities (create_token, verify_token) along with the refresh token endpoint (POST /auth/refresh).
+2. Task 2: Implemented initial reward creation and listing functions and endpoints (POST /missions/{id}/rewards and GET /rewards).
+3. Task 3: Created the leaderboard logic and initial player profile functions and endpoints (GET /leaderboard and GET /players/{id}/profile).
 
 ### Day 2
 
@@ -84,9 +84,9 @@
 
 **Naman**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1: Implemented player profile statistics to calculate total missions accepted, completed missions, and total rewards won.
+2. Task 2: Built the reward assignment function and endpoint (POST /rewards/{id}/assign) with mission completion validation.
+3. Task 3: Separated rewards and player rewards to get multiple-player reward tracking.
 
 ### Day 3
 
@@ -104,10 +104,8 @@
 
 **Naman**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
-
+1. Task 1: Updated assign_reward and get_player_profile to support both "approved" and "completed" mission statuses for teammate compatibility.
+2. Task 2: Tested the endpoints
 ---
 
 ## 3. Live App
