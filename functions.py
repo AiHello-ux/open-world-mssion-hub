@@ -301,45 +301,38 @@ def review_mission_completion(submission_id: int, status: str):
     session = Session(engine)
 
     submission = session.query(player_missions).filter(player_missions.id == submission_id).first()
-
     if not submission:
         session.close()
         return {"error": "Submission not found"}
 
     if submission.status != "submitted":
         session.close()
-        return {"error": "Submission is not pending review"}
+        return {"error": "Mission is not submitted"}
 
     if status not in ["completed", "rejected"]:
         session.close()
-        return {"error": "Invalid status"}
+        return {"error": "Invalid status. Use completed or rejected"}
 
     submission.status = status
 
     if status == "completed":
-
+        player = session.query(users).filter(users.id == submission.player_id).first()
         mission = session.query(missions).filter(missions.id == submission.mission_id).first()
 
-        if not mission:
-            session.close()
-            return {"error": "Mission not found"}
-
-        player = session.query(users).filter(users.id == submission.player_id).first()
-
-        if not player:
-            session.close()
-            return {"error": "Player not found"}
-
-        player.xp += int(mission.reward)
-        submission.completed_at = datetime.now()
+        xp_map = {
+            "easy": 50,
+            "medium": 100,
+            "hard": 200,
+            "special": 500
+        }
+        if player and mission:
+            player.xp += xp_map.get(mission.difficulty, 0)
+            submission.completed_at = datetime.now()
 
     session.commit()
     session.close()
 
-    return {
-        "message": "Mission submission reviewed successfully",
-        "status": status
-    }
+    return {"message": "Mission reviewed successfully"}
 
     
 
