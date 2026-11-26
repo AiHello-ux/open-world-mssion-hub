@@ -155,7 +155,6 @@ def add_mission(data: MissionCreate, token=Header(None)):
         raise HTTPException(status_code=400, detail="Mission already exists")
     return {"message": "Mission created successfully"}
 
-
 @app.get("/missions")
 def list_missions(difficulty: str = None, location: str = None, token=Header(None)):
     if not token:
@@ -183,7 +182,7 @@ def get_mission(mission_id: int, token=Header(None)):
 
 
 @app.patch("/missions/{mission_id}")
-def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
+def update_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
@@ -198,7 +197,7 @@ def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
         mission_id=mission_id,
         title=data.title,
         description=data.description,
-        difficulty=data.difficulty.lower() if data.difficulty is not None else None,
+        difficulty=data.difficulty,
         location=data.location,
         reward=data.reward,
         is_active=data.is_active
