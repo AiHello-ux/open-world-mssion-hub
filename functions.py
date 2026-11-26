@@ -390,24 +390,6 @@ def create_reward(mission_id: int, name: str, description: str):
     session.close()
     return result
 
-    new_reward = rewards(
-        mission_id=mission_id,
-        name=name,
-        description=description
-    )
-    session.add(new_reward)
-    session.commit()
-
-    result = {
-        "id": new_reward.id,
-        "mission_id": new_reward.mission_id,
-        "name": new_reward.name,
-        "description": new_reward.description,
-        "assigned_to": new_reward.assigned_to
-    }
-
-    session.close()
-    return result
 
 def get_available_rewards(player_id: int = None):
     session = Session(engine)
@@ -427,18 +409,6 @@ def get_available_rewards(player_id: int = None):
                 "name": item.name,
                 "description": item.description
             })
-
-    session.close()
-    return result
-
-    result = []
-    for item in available:
-        result.append({
-            "id": item.id,
-            "mission_id": item.mission_id,
-            "name": item.name,
-            "description": item.description
-        })
 
     session.close()
     return result
@@ -467,7 +437,7 @@ def assign_reward(reward_id: int, player_id: int):
     completed = session.query(player_missions).filter(
         player_missions.player_id == player_id,
         player_missions.mission_id == reward_item.mission_id,
-        player_missions.status == "approved"
+        player_missions.status.in_(["approved", "completed"])
     ).first()
     if not completed:
         session.close()
@@ -522,7 +492,7 @@ def get_player_profile(player_id: int):
 
     completed_missions = session.query(player_missions).filter(
         player_missions.player_id == player_id,
-        player_missions.status == "approved"
+        player_missions.status.in_(["approved", "completed"])
     ).count()
 
     total_rewards = session.query(player_rewards).filter(
