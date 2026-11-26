@@ -54,6 +54,9 @@ class RewardCreate(BaseModel):
     name: str = Field(min_length=1)
     description: str = Field(min_length=1)
 
+class MissionSubmit(BaseModel):
+    submission_details: str
+
 
 # A1 - A3: Authentication APIs
 @app.post("/auth/register")
@@ -247,19 +250,19 @@ def my_missions(token: str = Header(None)):
 
 
 @app.post("/missions/{mission_id}/submit")
-def submit_mission(mission_id: int,submission_details: str,token: str = Header(None)):
-
+def submit_mission(mission_id: int, data: MissionSubmit, token: str = Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
-    payload = functions.verify_token(token=token,tokentype="access")
-
+    payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    player_id = payload["user_id"]
+    if payload.get("role") != "player":
+        raise HTTPException(status_code=403, detail="Only players can submit missions")
 
-    result = functions.submit_mission(player_id=player_id,mission_id=mission_id,submission_details=submission_details)
+    player_id = payload["user_id"]
+    result = functions.submit_mission(player_id=player_id, mission_id=mission_id, submission_details=data.submission_details)
 
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
