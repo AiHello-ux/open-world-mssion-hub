@@ -215,20 +215,127 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
     return True
 
 
+
 def accept_mission(player_id: int, mission_id: int):
-    pass
+    session = Session(engine)
+
+    mission = session.query(missions).filter(missions.id == mission_id,missions.is_active == True).first()
+
+    if not mission:
+        session.close()
+        return {"error": "Mission not found or inactive"}
+
+    existing = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
+
+    if existing:
+        session.close()
+        return {"error": "Mission already accepted"}
+
+    new_mission = player_missions(
+        player_id=player_id,
+        mission_id=mission_id,
+        status="accepted"
+    )
+
+    session.add(new_mission)
+    session.commit()
+    session.close()
+
+    return {"message": "Mission accepted successfully"}
+
+
 
 def get_player_accepted_missions(player_id: int):
-    pass
+    session = Session(engine)
+
+    result = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.status == "accepted").all()
+
+    missions_list = []
+
+    for item in result:
+        missions_list.append({
+            "id": item.id,
+            "mission_id": item.mission_id,
+            "status": item.status,
+            "accepted_at": item.accepted_at
+        })
+
+    session.close()
+    return missions_list
 
 def submit_mission_completion(player_id: int, mission_id: int, submission_details: str):
-    pass
+    session = Session(engine)
+
+    mission = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
+
+    if not mission:
+        session.close()
+        return {"error": "Mission not found"}
+
+    if mission.status != "accepted":
+        session.close()
+        return {"error": "Mission cannot be submitted"}
+
+    mission.submission_details = submission_details
+    mission.status = "submitted"
+
+    session.commit()
+    session.close()
+
+    return {"message": "Mission submitted successfully"}
 
 def review_mission_completion(submission_id: int, status: str):
-    pass
+    session = Session(engine)
+
+    submission = session.query(player_missions).filter(player_missions.id == submission_id).first()
+
+    if not submission:
+        session.close()
+        return {"error": "Submission not found"}
+
+    if submission.status != "submitted":
+        session.close()
+        return {"error": "Mission is not submitted"}
+
+    if status not in ["completed", "rejected"]:
+        session.close()
+        return {"error": "Invalid status"}
+
+    submission.status = status
+
+    if status == "completed":
+        player = session.query(users).filter(users.id == submission.player_id).first()
+
+        mission = session.query(missions).filter(missions.id == submission.mission_id).first()
+
+        if player and mission:
+            player.xp += int(mission.reward)
+            submission.completed_at = datetime.now()
+
+    session.commit()
+    session.close()
+
+    return {"message": "Mission reviewed successfully"}
+    
 
 def get_player_completed_history(player_id: int):
-    pass
+    session = Session(engine)
+
+    result = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.status == "completed").all()
+
+    history = []
+
+    for item in result:
+        history.append({
+            "id": item.id,
+            "mission_id": item.mission_id,
+            "submission_details": item.submission_details,
+            "status": item.status,
+            "completed_at": item.completed_at
+        })
+
+    session.close()
+    return history
 
 def create_reward(mission_id: int, name: str, description: str):
     session = Session(engine)
