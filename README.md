@@ -19,42 +19,42 @@
 
 | # | Functionality | Route |
 |:---|:---|:---|
-| **A1** | Register | `POST /register` |
-| **E1** | Create a mission manager account | `POST /mission-managers` |
+| **A1** | Register | `POST /auth/register` |
+| **E1** | Create a mission manager account | `POST /admin/mission-managers` |
 | **E2** | Create a new mission | `POST /missions` |
 | **E3** | Get all available missions | `GET /missions` |
-| **E4** | Get details of a particular mission | `GET /missions/{id}` |
-| **E5** | Update mission details or availability | `PUT /missions/{id}` |
+| **E4** | Get details of a particular mission | `GET /missions/{mission_id}` |
+| **E5** | Update mission details or availability | `PATCH /missions/{mission_id}` |
 
 **Abhishek: Gameplay Flow**
 
 | # | Functionality | Route |
 |:---|:---|:---|
-| **A2** | Login | `POST /login` |
-| **E6** | Accept a mission | `POST /missions/{id}` |
+| **A2** | Login | `POST /auth/login` |
+| **E6** | Accept a mission | `POST /missions/{mission_id}/accept` |
 | **E7** | Get missions accepted by the logged-in player | `GET /players/me/missions` |
-| **E8** | Submit mission completion details | `POST /player-missions/{id}` |
-| **E9** | Approve or reject a mission completion | `PATCH /player-missions/{id}` |
-| **E10** | Get a player's completed mission history | `GET /my-player` |
+| **E8** | Submit mission completion details | `POST /missions/{mission_id}/submit` |
+| **E9** | Approve or reject a mission completion | `PATCH /submissions/{submission_id}/review` |
+| **E10** | Get a player's completed mission history | `GET /players/{player_id}/history` |
 
 **Naman: Rewards, Leaderboard and Profile**
 
 | # | Functionality | Route |
 |:---|:---|:---|
-| **A3** | Refresh token | `POST /refresh` |
-| **E11** | Create a reward for a mission | `POST /rewards` |
+| **A3** | Refresh token | `POST /auth/refresh` |
+| **E11** | Create a reward for a mission | `POST /missions/{mission_id}/rewards` |
 | **E12** | Get available rewards | `GET /rewards` |
-| **E13** | Assign a reward to a player | `POST /rewards/{id}` |
+| **E13** | Assign a reward to a player | `POST /rewards/{reward_id}/assign` |
 | **E14** | Get player rankings and leaderboard | `GET /leaderboard` |
-| **E15** | Get player profile and statistics | `GET /players/{id}` |
+| **E15** | Get player profile and statistics | `GET /players/{player_id}/profile` |
 
 ### Day 1
 
 **Melvin**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1: Initialized the GitHub repository, added GitHub Secrets, and created the `README.md` and base project structure.
+2. Task 2: Provisioned the AWS EC2 instance and installed Docker on it.
+3. Task 3: Configured the deployment environment by connecting GitHub Secrets with the EC2 and Docker setup.
 
 **Abhishek**
 
@@ -72,9 +72,9 @@
 
 **Melvin**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1: Fixed AWS EC2 instance issues and verified deployment stability.
+2. Task 2: Implemented E1 (`POST /admin/mission-managers`) for admin-only mission manager creation.
+3. Task 3: Implemented E2 (`POST /missions`) for creating new missions.
 
 **Abhishek**
 
@@ -92,9 +92,9 @@
 
 **Melvin**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1: Fixed AWS EC2 instance issues and verified the running container.
+2. Task 2: Implemented E3 (`GET /missions`) and E4 (`GET /missions/{mission_id}`) to list and fetch mission details.
+3. Task 3: Implemented E5 (`PATCH /missions/{mission_id}`) to update mission details and availability.
 
 **Abhishek**
 
@@ -153,24 +153,24 @@ docker run -p 8001:8001 image_name
 
 | # | What it does | Method | Path | Request Body / Params | Error Codes | Who Built |
 |:---:|:---|:---:|:---|:---|:---:|:---:|
-| **A1** | Register a new account | `POST` | `/register` | | | Melvin |
-| **A2** | Login and generate access and refresh tokens | `POST` | `/login` | | | Abhishek |
-| **A3** | Generate a new access token | `POST` | `/refresh` | | | Naman |
-| **E1** | Create a mission manager account | `POST` | `/mission-managers` | | | Melvin |
+| **A1** | Register a new account | `POST` | `/auth/register` | | | Melvin |
+| **A2** | Login and generate access and refresh tokens | `POST` | `/auth/login` | | | Abhishek |
+| **A3** | Generate a new access token | `POST` | `/auth/refresh` | | | Naman |
+| **E1** | Create a mission manager account | `POST` | `/admin/mission-managers` | | | Melvin |
 | **E2** | Create a new mission | `POST` | `/missions` | | | Melvin |
 | **E3** | Get all available missions | `GET` | `/missions` | | | Melvin |
-| **E4** | Get details of a particular mission | `GET` | `/missions/{id}` | | | Melvin |
-| **E5** | Update mission details or availability | `PUT` | `/missions/{id}` | | | Melvin |
-| **E6** | Accept a mission | `POST` | `/missions/{id}` | | | Abhishek |
+| **E4** | Get details of a particular mission | `GET` | `/missions/{mission_id}` | | | Melvin |
+| **E5** | Update mission details or availability | `PATCH` | `/missions/{mission_id}` | | | Melvin |
+| **E6** | Accept a mission | `POST` | `/missions/{mission_id}/accept` | | | Abhishek |
 | **E7** | Get missions accepted by the logged-in player | `GET` | `/players/me/missions` | | | Abhishek |
-| **E8** | Submit mission completion details | `POST` | `/player-missions/{id}` | | | Abhishek |
-| **E9** | Approve or reject a mission completion | `PATCH` | `/player-missions/{id}` | | | Abhishek |
-| **E10** | Get a player's completed mission history | `GET` | `/my-player` | | | Abhishek |
-| **E11** | Create a reward for a mission | `POST` | `/rewards` | | | Naman |
+| **E8** | Submit mission completion details | `POST` | `/missions/{mission_id}/submit` | | | Abhishek |
+| **E9** | Approve or reject a mission completion | `PATCH` | `/submissions/{submission_id}/review` | | | Abhishek |
+| **E10** | Get a player's completed mission history | `GET` | `/players/{player_id}/history` | | | Abhishek |
+| **E11** | Create a reward for a mission | `POST` | `/missions/{mission_id}/rewards` | | | Naman |
 | **E12** | Get available rewards | `GET` | `/rewards` | | | Naman |
-| **E13** | Assign a reward to a player | `POST` | `/rewards/{id}` | | | Naman |
+| **E13** | Assign a reward to a player | `POST` | `/rewards/{reward_id}/assign` | | | Naman |
 | **E14** | Get player rankings and leaderboard | `GET` | `/leaderboard` | | | Naman |
-| **E15** | Get player profile and statistics | `GET` | `/players/{id}` | | | Naman |
+| **E15** | Get player profile and statistics | `GET` | `/players/{player_id}/profile` | | | Naman |
 
 ---
 

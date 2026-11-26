@@ -272,33 +272,25 @@ def submit_mission(mission_id: int, data: MissionSubmit, token: str = Header(Non
 
 
 @app.patch("/submissions/{submission_id}/review")
-def review_mission_completion(
-    submission_id: int,
-    status: str,
-    token: str = Header(None)
-):
-
+def review_submission(submission_id: int, status: str, token=Header(None)):
     if not token:
-        raise HTTPException(status_code=401,detail="Token missing")
+        raise HTTPException(status_code=401, detail="Token Missing")
 
-    payload = functions.verify_token(token=token,tokentype="access")
-
+    payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
-        raise HTTPException(status_code=401,detail="Invalid or expired token")
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     if payload.get("role") != "mission_manager":
-        raise HTTPException(status_code=403,detail="Only mission managers can review submissions")
+        raise HTTPException(status_code=403, detail="Mission Manager access required")
 
-    result = functions.review_mission_completion(submission_id=submission_id,status=status)
-
+    result = functions.review_mission_completion(
+        submission_id=submission_id,
+        status=status.lower()
+    )
     if "error" in result:
-        raise HTTPException(
-            status_code=400,
-            detail=result["error"]
-        )
+        raise HTTPException(status_code=400, detail=result["error"])
 
     return result
-
 
 
 @app.get("/players/{player_id}/history")
