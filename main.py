@@ -57,7 +57,7 @@ class RewardCreate(BaseModel):
 # A1 - A3: Authentication APIs
 @app.post("/register")
 def register(data: UserLogin):
-    if functions.register_user(user_name=data.username, password=data.password, role=data.role):
+    if functions.register_user(user_name=data.username, password=data.password, role="player"):
         return {"message": "user registered successfully"}
     raise HTTPException(status_code=400, detail="User already exists")
 
@@ -116,7 +116,7 @@ def refresh(refresh_token: str):
 def add_mission_manager(data: UserRegister, token=Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail=" Token Missing")
-    payload= functions.verify_login(token=token, tokentype="access")
+    payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "admin":
@@ -124,7 +124,7 @@ def add_mission_manager(data: UserRegister, token=Header(None)):
     add_mission_manager =functions.create_mission_manager(username=data.username, email=data.email, password=data.password)
     if not add_mission_manager:
         raise HTTPException(status_code=400, detail="Mission Manager already exists")
-    return {"message": "Mission Manager created successfully"}
+    return {"Mission Manager created successfully"}
 
 @app.post("/missions")
 def add_mission(data: MissionCreate, token=Header(None)):
@@ -133,18 +133,20 @@ def add_mission(data: MissionCreate, token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "mission_manager":
         raise HTTPException(status_code=403, detail="Mission Manager access required")
-    
+    if data.difficulty.lower() not in VALID_DIFFICULTIES:
+        raise HTTPException(status_code=400, detail="Invalid difficulty ,Choose from easy, medium, hard, special")
+
     result = functions.create_mission(
         created_by=payload.get("user_id"),
         title=data.title,
         description=data.description,
-        difficulty=data.difficulty,
+        difficulty=data.difficulty.lower(),
         location=data.location,
         reward=data.reward
     )
-    if result is False:
+    if not result:
         raise HTTPException(status_code=400, detail="Mission already exists")
-    return {"message": "Mission created successfully"}
+    return {"Mission created successfully"}
 
 @app.get("/missions")
 def list_missions(difficulty: str = None, location: str = None, token=Header(None)):
@@ -173,8 +175,7 @@ def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "mission_manager":
         raise HTTPException(status_code=403, detail="Mission Manager access required")
-    
-    updated = functions.update_mission(
+    temp = functions.update_mission(
         mission_id=mission_id,
         title=data.title,
         description=data.description,
@@ -183,10 +184,9 @@ def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
         reward=data.reward,
         is_active=data.is_active
     )
-    if not updated:
+    if not temp:
         raise HTTPException(status_code=404, detail="Mission not found")
-    return {"message": "Mission updated successfully"}
-
+    return {"Mission updated successfully"}
 
 # E6 - E10: Player Mission & Review APIs
 
