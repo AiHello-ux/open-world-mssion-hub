@@ -227,13 +227,19 @@ def update_mission(mission_id: int, title: str = None, description: str = None, 
 def accept_mission(player_id: int, mission_id: int):
     session = Session(engine)
 
-    mission = session.query(missions).filter(missions.id == mission_id,missions.is_active == True).first()
+    mission = session.query(missions).filter(
+        missions.id == mission_id
+    ).first()
 
     if not mission:
         session.close()
-        return {"error": "Mission not found or inactive"}
+        return {"error": "Mission not found"}
 
-    existing = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id).first()
+    if not mission.is_active:
+        session.close()
+        return {"error": "Mission is not active"}
+
+    existing = session.query(player_missions).filter(player_missions.player_id == player_id,player_missions.mission_id == mission_id,player_missions.status == "accepted").first()
 
     if existing:
         session.close()
@@ -247,9 +253,12 @@ def accept_mission(player_id: int, mission_id: int):
 
     session.add(new_mission)
     session.commit()
+
+    result = new_mission.id
+
     session.close()
 
-    return {"message": "Mission accepted successfully"}
+    return {"message": "Mission accepted successfully", "id": result}
 
 
 
