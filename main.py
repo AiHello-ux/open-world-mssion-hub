@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import date
 from pydantic import BaseModel, Field
 import functions
 
@@ -17,10 +16,9 @@ app.add_middleware(
 )
 
 VALID_DIFFICULTIES = ["easy", "medium", "hard", "special"]
-VALID_REVIEW_STATUSES = ["approved", "rejected"]
+VALID_ROLES = ["player", "admin", "mission_manager"]
 
 
-# Pydantic Models
 class UserRegister(BaseModel):
     username: str = Field(min_length=1)
     email: str = Field(min_length=1)
@@ -31,7 +29,6 @@ class UserLogin(BaseModel):
     email: str = Field(min_length=1)
     password: str = Field(min_length=1)
 
-
 class MissionCreate(BaseModel):
     title: str = Field(min_length=1)
     description: str = Field(min_length=1)
@@ -39,6 +36,10 @@ class MissionCreate(BaseModel):
     location: str = Field(min_length=1)
     reward: str = Field(min_length=1)
 
+class MissionManagerCreate(BaseModel):
+    username: str = Field(min_length=1)
+    email: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 class MissionUpdate(BaseModel):
     title: str = None
@@ -55,9 +56,9 @@ class RewardCreate(BaseModel):
 
 
 # A1 - A3: Authentication APIs
-@app.post("/register")
+@app.post("/auth/register")
 def register(data: UserRegister):
-    if functions.register_user(username=data.username, email=data.email, password=data.password, role="player"):
+    if functions.register_user(username=data.username, email=data.email, password=data.password):
         return {"message": "user registered successfully"}
     raise HTTPException(status_code=400, detail="User already exists")
 
@@ -113,28 +114,31 @@ def refresh(refresh_token: str):
 
 # E1 - E5: Admin & Mission APIs
 @app.post("/admin/mission-managers")
-def add_mission_manager(data: UserRegister, token=Header(None)):
+def add_mission_manager(data: MissionManagerCreate, token=Header(None)):
     if not token:
-        raise HTTPException(status_code=401, detail=" Token Missing")
+        raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    add_mission_manager =functions.create_mission_manager(username=data.username, email=data.email, password=data.password)
-    if not add_mission_manager:
+    created = functions.create_mission_manager(username=data.username, email=data.email, password=data.password)
+    if not created:
         raise HTTPException(status_code=400, detail="Mission Manager already exists")
-    return {"Mission Manager created successfully"}
+    return {"message": "Mission Manager created successfully"}
+
 
 @app.post("/missions")
 def add_mission(data: MissionCreate, token=Header(None)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "mission_manager":
         raise HTTPException(status_code=403, detail="Mission Manager access required")
     if data.difficulty.lower() not in VALID_DIFFICULTIES:
-        raise HTTPException(status_code=400, detail="Invalid difficulty ,Choose from easy, medium, hard, special")
+        raise HTTPException(status_code=400, detail="Invalid difficulty, choose from easy, medium, hard, special")
 
     result = functions.create_mission(
         created_by=payload.get("user_id"),
@@ -146,47 +150,59 @@ def add_mission(data: MissionCreate, token=Header(None)):
     )
     if not result:
         raise HTTPException(status_code=400, detail="Mission already exists")
-    return {"Mission created successfully"}
+    return {"message": "Mission created successfully"}
+
 
 @app.get("/missions")
 def list_missions(difficulty: str = None, location: str = None, token=Header(None)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
+
     missions_list = functions.get_all_missions(difficulty=difficulty, location=location)
     return {"missions": missions_list}
 
+
 @app.get("/missions/{mission_id}")
 def get_mission(mission_id: int, token=Header(None)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
+
     mission = functions.get_mission_by_id(mission_id=mission_id)
     if not mission:
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission
 
+
 @app.patch("/missions/{mission_id}")
 def edit_mission(mission_id: int, data: MissionUpdate, token=Header(None)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Token Missing")
     payload = functions.verify_token(token=token, tokentype="access")
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     if payload.get("role") != "mission_manager":
         raise HTTPException(status_code=403, detail="Mission Manager access required")
+    if data.difficulty is not None and data.difficulty.lower() not in VALID_DIFFICULTIES:
+        raise HTTPException(status_code=400, detail="Invalid difficulty, choose from easy, medium, hard, special")
+
     temp = functions.update_mission(
         mission_id=mission_id,
         title=data.title,
         description=data.description,
-        difficulty=data.difficulty,
+        difficulty=data.difficulty.lower() if data.difficulty is not None else None,
         location=data.location,
         reward=data.reward,
         is_active=data.is_active
     )
     if not temp:
         raise HTTPException(status_code=404, detail="Mission not found")
-    return {"Mission updated successfully"}
+    return {"message": "Mission updated successfully"}
 
 # E6 - E10: Player Mission & Review APIs
 
