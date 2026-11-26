@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, Float, String, Boolean, Date, DateTime, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, create_engine
 from sqlalchemy.orm import Session, declarative_base
 import jwt
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timedelta, timezone
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -111,6 +111,8 @@ def register_user(username: str, email: str, password: str, role: str = "player"
     session.close()
     return True
 
+register_user(username="admin", email="admin@gmail.com", password="admin", role="admin")
+
 def verify_login(email: str, password: str):
     session = Session(engine)
     user = session.query(users).filter(users.email == email).first()
@@ -185,7 +187,6 @@ def get_mission_by_id(mission_id: int):
     if not mission:
         session.close()
         return None
-    session.close()
     temp = {
         "id": mission.id,
         "title": mission.title,
@@ -193,8 +194,10 @@ def get_mission_by_id(mission_id: int):
         "difficulty": mission.difficulty,
         "location": mission.location,
         "reward": mission.reward,
+        "is_active": mission.is_active,
         "created_by": mission.created_by
     }
+    session.close()
     return temp
 
 def update_mission(mission_id: int, title: str = None, description: str = None, difficulty: str = None, location: str = None, reward: str = None, is_active: bool = None):
