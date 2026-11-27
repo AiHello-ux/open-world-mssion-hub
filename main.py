@@ -293,10 +293,7 @@ def review_submission(submission_id: int, status: str, token=Header(None)):
 
 
 @app.get("/players/{player_id}/history")
-def get_player_completed_history(
-    player_id: int,
-    token: str = Header(None)
-):
+def get_player_completed_history(player_id: int,token: str = Header(None)):
 
     if not token:
         raise HTTPException(status_code=401,detail="Token missing")

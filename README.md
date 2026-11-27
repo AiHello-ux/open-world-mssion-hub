@@ -58,9 +58,9 @@
 
 **Abhishek**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1:helped in the base project structure 
+2. Task 2:implemented | **A2** | Login | `POST /auth/login` | and  | **E6** | Accept a mission | `POST /missions/{mission_id}/accept` | and | **E7** | Get missions accepted by the logged-in player | `GET /players/me/missions` |
+4. Task 3:checked the bugs in this endpoints and A2
 
 **Naman**
 
@@ -78,9 +78,9 @@
 
 **Abhishek**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1:helped in EC2 instance issues
+2. Task 2:worked on | **E8** | Submit mission completion details | `POST /missions/{mission_id}/submit` | and | **E9** | Approve or reject a mission completion | `PATCH /submissions/{submission_id}/review` |
+3. Task 3:tested all the four endpoints and assured all are working including | **A2** | Login | `POST /auth/login` |
 
 **Naman**
 
@@ -98,15 +98,15 @@
 
 **Abhishek**
 
-1. Task 1:
-2. Task 2:
-3. Task 3:
+1. Task 1:implemented  **E10** | Get a player's completed mission history | `GET /players/{player_id}/history` |
+2. Task 2:fixed the bugs in E10
+3. Task 3:once checked everything is working on swagger and verified it
 
 **Naman**
 
-1. Task 1: Updated `assign_reward` and `get_player_profile` to support both `"approved"` and `"completed"` mission statuses for teammate compatibility.
-2. Task 2: Tested the endpoints.
-
+1. Task 1: Updated assign_reward and get_player_profile to support both "approved" and "completed" mission statuses for teammate compatibility.
+2. Task 2: Tested the endpoints
+3. Task 3: Added pytest is CI/CD
 ---
 
 ## 3. Live App
