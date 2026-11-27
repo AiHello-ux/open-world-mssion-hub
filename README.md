@@ -180,7 +180,6 @@ uvicorn main:app --host 0.0.0.0 --port 8001
 
 ## 7. API Contract
 
-> **Authentication Header:** Protected endpoints expect the JWT access token in the `token` HTTP header (`Header(None)`).
 
 ### Completed Endpoints Table (A1–A3, E1–E15)
 
@@ -208,8 +207,6 @@ uvicorn main:app --host 0.0.0.0 --port 8001
 ---
 
 ## 8. Database
-
-Database engine: SQLite (`sqlite:///gta.db`), defined via SQLAlchemy ORM in `functions.py`.
 
 ### Table 1: `users`
 
